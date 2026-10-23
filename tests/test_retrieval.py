@@ -60,8 +60,8 @@ def test_evidence_context_formatting():
     ]
 
     context = format_evidence_context(mock_chunks)
-    assert "[D1 | PDF page 11 | Section 03.03 Type of Applications]" in context
-    assert "[D2 | PDF page 9 | Section 02.02.07 Patent Office]" in context
+    assert "[D1 | PDF page 11 | Line 1 | Section 03.03 Type of Applications]" in context
+    assert "[D2 | PDF page 9 | Line 1 | Section 02.02.07 Patent Office]" in context
     assert "does not claim priority" in context
 
 

@@ -20,12 +20,14 @@ class RetrievedChunk:
     chunk_id: str
     distance: float
     similarity: float
+    start_line: int = 1
+    end_line: int = 1
+    line_range: str = "Line 1"
 
     def to_citation_label(self) -> str:
         """Format human-readable reference label."""
-        if self.section and self.section != "General":
-            return f"PDF page {self.pdf_page}, Section {self.section}"
-        return f"PDF page {self.pdf_page}"
+        sec = f", Section {self.section}" if self.section and self.section != "General" else ""
+        return f"PDF page {self.pdf_page}, {self.line_range}{sec}"
 
 
 @dataclass
@@ -48,12 +50,12 @@ def format_evidence_context(chunks: List[RetrievedChunk]) -> str:
     """
     Construct clearly labeled evidence context for the answer generator.
     Format:
-    [D1 | PDF page 12 | Section 03.03]
+    [D1 | PDF page 12 | Lines 7-11 | Section 03.03]
     Passage text...
     """
     blocks = []
     for chunk in chunks:
-        header = f"[{chunk.evidence_id} | PDF page {chunk.pdf_page} | Section {chunk.section}]"
+        header = f"[{chunk.evidence_id} | PDF page {chunk.pdf_page} | {chunk.line_range} | Section {chunk.section}]"
         blocks.append(f"{header}\n{chunk.content}")
     return "\n\n".join(blocks)
 
@@ -108,6 +110,10 @@ def retrieve_evidence(
         # For normalized vectors, L2 distance d^2 = 2 - 2*cos. Cosine similarity = 1 - (d^2)/2
         sim = max(0.0, min(1.0, 1.0 - (dist * dist) / 2.0))
 
+        start_line = int(doc.metadata.get("start_line", 1))
+        end_line = int(doc.metadata.get("end_line", 1))
+        line_range = str(doc.metadata.get("line_range", f"Lines {start_line}-{end_line}" if start_line != end_line else f"Line {start_line}"))
+
         chunk = RetrievedChunk(
             evidence_id=f"D{evidence_counter}",
             content=doc.page_content,
@@ -115,7 +121,10 @@ def retrieve_evidence(
             section=str(doc.metadata.get("section", "General")),
             chunk_id=chunk_id,
             distance=dist,
-            similarity=sim
+            similarity=sim,
+            start_line=start_line,
+            end_line=end_line,
+            line_range=line_range
         )
         chunks.append(chunk)
         evidence_counter += 1

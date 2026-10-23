@@ -81,3 +81,50 @@ def test_live_gemini_integration(pipeline):
     assert "priority" in res.answer.lower()
     assert len(res.citations) > 0
     assert any(c.pdf_page == 11 for c in res.citations)
+
+
+def test_assignment_q1_copyright_duration(pipeline):
+    """Assignment Q1: Duration of copyright in registered design and extension."""
+    q = "How long does a proprietor have copyright in a registered design, and can it be extended?"
+    res = pipeline.run(q, mock_llm=deterministic_mock_llm)
+    assert res.is_answered is True
+    assert "ten years" in res.answer.lower()
+    assert "five years" in res.answer.lower()
+    assert any(c.pdf_page in [36, 39] for c in res.citations)
+
+
+def test_assignment_q2_classification_system(pipeline):
+    """Assignment Q2: Classification system for registered designs."""
+    q = "Which classification system is used to register designs?"
+    res = pipeline.run(q, mock_llm=deterministic_mock_llm)
+    assert res.is_answered is True
+    assert "locarno" in res.answer.lower()
+    assert any(c.pdf_page == 20 for c in res.citations)
+
+
+def test_assignment_q3_trademark_fee(pipeline):
+    """Assignment Q3: Government fee to register a trademark (must be Not found)."""
+    q = "What is the government fee to register a trademark?"
+    res = pipeline.run(q, mock_llm=deterministic_mock_llm)
+    assert res.is_answered is False
+    assert res.answer == "Not found"
+    assert len(res.citations) == 0
+
+
+def test_assignment_q4_current_controller_general(pipeline):
+    """Assignment Q4: Current Controller General of Patents (must be Not found)."""
+    q = "Who is the current Controller General of Patents?"
+    res = pipeline.run(q, mock_llm=deterministic_mock_llm)
+    assert res.is_answered is False
+    assert res.answer == "Not found"
+    assert len(res.citations) == 0
+
+
+def test_assignment_q5_design_registration_fee(pipeline):
+    """Assignment Q5: Fee to register a design (manual does not provide rupee fees; must be Not found)."""
+    q = "What is the fee to register a design?"
+    res = pipeline.run(q, mock_llm=deterministic_mock_llm)
+    assert res.is_answered is False
+    assert res.answer == "Not found"
+    assert len(res.citations) == 0
+

@@ -18,12 +18,30 @@ class Citation:
     evidence_id: str
     snippet: str
     pdf_link: str
+    start_line: int = 1
+    end_line: int = 1
+    line_range: str = "Line 1"
+    supporting_passage: str = ""
 
     @property
     def formatted(self) -> str:
-        if self.section and self.section != "General":
-            return f"PDF page {self.pdf_page}, Section {self.section}"
-        return f"PDF page {self.pdf_page}"
+        lines_str = f"{self.start_line}-{self.end_line}" if self.start_line != self.end_line else str(self.start_line)
+        sec_str = f", Section {self.section}" if self.section and self.section != "General" else ""
+        return f"PDF page {self.pdf_page}, Extracted lines: {lines_str}{sec_str}"
+
+    def detailed_display(self) -> str:
+        lines_str = f"{self.start_line}-{self.end_line}" if self.start_line != self.end_line else str(self.start_line)
+        sec = self.section if self.section and self.section != "General" else "General"
+        quotation = (self.supporting_passage or self.snippet).strip().replace("\n", " ")
+        if len(quotation) > 280:
+            quotation = quotation[:277] + "..."
+        return (
+            f"Source: Manual of Designs Practice & Procedure\n"
+            f"PDF page: {self.pdf_page}\n"
+            f"Extracted lines: {lines_str}\n"
+            f"Section: {sec}\n"
+            f'Supporting passage: "{quotation}"'
+        )
 
 
 @dataclass
@@ -44,7 +62,10 @@ class PipelineResult:
             return "Not found"
 
         output = f"Answer:\n{self.answer}"
-        if self.references_text:
+        if self.citations:
+            detailed_refs = "\n\n".join([c.detailed_display() for c in self.citations])
+            output += f"\n\nSupporting PDF References:\n{detailed_refs}"
+        elif self.references_text:
             output += f"\n\nReference:\n{self.references_text}"
         return output
 
@@ -67,7 +88,7 @@ def build_citations(
             logger.warning(f"Rejected unknown evidence identifier {eid}")
             continue
 
-        key = (chunk.pdf_page, chunk.section)
+        key = (chunk.pdf_page, chunk.start_line, chunk.end_line, chunk.section)
         if key in seen_page_sections:
             continue
         seen_page_sections.add(key)
@@ -75,18 +96,24 @@ def build_citations(
         pdf_rel_path = cfg.pdf_path.name
         pdf_link = f"data/raw/{pdf_rel_path}#page={chunk.pdf_page}"
 
+        passage = chunk.content.strip()
+
         citations.append(
             Citation(
                 pdf_page=chunk.pdf_page,
                 section=chunk.section,
                 evidence_id=chunk.evidence_id,
                 snippet=chunk.content[:200],
-                pdf_link=pdf_link
+                pdf_link=pdf_link,
+                start_line=chunk.start_line,
+                end_line=chunk.end_line,
+                line_range=chunk.line_range,
+                supporting_passage=passage
             )
         )
 
-    # Sort citations in ascending physical page order
-    citations.sort(key=lambda c: c.pdf_page)
+    # Sort citations in ascending physical page order, then start_line
+    citations.sort(key=lambda c: (c.pdf_page, c.start_line))
     return citations
 
 

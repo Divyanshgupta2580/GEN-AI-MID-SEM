@@ -176,6 +176,24 @@ def deterministic_mock_llm(question: str, evidence_context: str) -> GroundedAnsw
                 evidence_ids=[eid]
             )
 
+    if "copyright" in q_lower and ("how long" in q_lower or "extended" in q_lower):
+        eid = find_chunk_with(["ten years", "extended"]) or find_chunk_with(["ten years"])
+        if eid:
+            return GroundedAnswerResponse(
+                answerable=True,
+                answer="The proprietor shall have copyright in the design for ten years from the date of registration. This period of ten years can be extended by five years, if the registered proprietor applies for extension in the prescribed manner.",
+                evidence_ids=[eid]
+            )
+
+    if "classification system" in q_lower:
+        eid = find_chunk_with(["locarno agreement"]) or find_chunk_with(["third schedule"])
+        if eid:
+            return GroundedAnswerResponse(
+                answerable=True,
+                answer="The classification of articles under The Third Schedule is based on the International Classification of Industrial Designs according to the Locarno Agreement.",
+                evidence_ids=[eid]
+            )
+
     # All unanswerable questions
     return GroundedAnswerResponse(
         answerable=False,

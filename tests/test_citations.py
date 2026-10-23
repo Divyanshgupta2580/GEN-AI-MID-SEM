@@ -55,7 +55,9 @@ def test_build_citations_from_valid_evidence(sample_retrieval_result):
 
     c_p11 = next(c for c in citations if c.pdf_page == 11)
     assert c_p11.section == "03.03 Type of Applications"
-    assert "PDF page 11, Section 03.03 Type of Applications" in c_p11.formatted
+    assert "PDF page 11" in c_p11.formatted
+    assert "Section 03.03 Type of Applications" in c_p11.formatted
+    assert "Extracted lines:" in c_p11.formatted
 
 
 def test_reject_hallucinated_evidence_identifiers(sample_retrieval_result):

@@ -101,11 +101,33 @@ def chunk_extracted_pages(
             chunk_specific_section = extract_section_title(chunk_text, default=current_active_section)
             chunk_id = f"p{page.pdf_page}_c{chunk_idx + 1}"
 
+            # Calculate deterministic physical line range for this chunk
+            start_line = 1
+            end_line = 1
+            if page.lines:
+                chunk_start_char = page.text.find(chunk_text)
+                chunk_end_char = chunk_start_char + len(chunk_text) if chunk_start_char != -1 else 0
+
+                for pline in page.lines:
+                    if chunk_start_char != -1 and pline.end_char >= chunk_start_char:
+                        start_line = pline.line_number
+                        break
+
+                for pline in reversed(page.lines):
+                    if chunk_end_char != -1 and pline.start_char <= chunk_end_char:
+                        end_line = pline.line_number
+                        break
+
+            line_range = f"Lines {start_line}-{end_line}" if start_line != end_line else f"Line {start_line}"
+
             doc = Document(
                 page_content=chunk_text,
                 metadata={
                     "source": page.source,
                     "pdf_page": page.pdf_page,
+                    "start_line": start_line,
+                    "end_line": end_line,
+                    "line_range": line_range,
                     "section": chunk_specific_section,
                     "chunk_id": chunk_id,
                     "chunk_index": chunk_idx + 1,

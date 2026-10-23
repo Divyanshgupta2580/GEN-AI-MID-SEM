@@ -25,7 +25,7 @@ class AppConfig:
     # Vector Database & Embeddings (Local Persistent ChromaDB only - No cloud/remote credentials)
     chroma_dir: Path = field(
         default_factory=lambda: Path(
-            os.getenv("CHROMA_PERSIST_DIRECTORY", os.getenv("CHROMA_DIR", str(BASE_DIR / "chroma_db")))
+            os.getenv("CHROMA_PERSIST_DIRECTORY", str(BASE_DIR / "chroma_db"))
         )
     )
     collection_name: str = "designs_manual"
@@ -38,13 +38,12 @@ class AppConfig:
 
     # Information Retrieval
     top_k: int = 6
-    # Quality gate: similarity threshold (in [0, 1] cosine similarity scale)
-    relevance_threshold: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.45"))
+    relevance_threshold: float = 0.45
 
     # LLM Answer Generation
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     google_api_key: Optional[str] = os.getenv("GOOGLE_API_KEY")
-    temperature: float = float(os.getenv("TEMPERATURE", "0.0"))
+    temperature: float = 0.0
 
     def resolve_pdf_path(self) -> Path:
         """Resolve the path to the PDF, checking custom configured path, default path, or root fallback."""

@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class PageLine:
+    """Represents a single line of extracted text on a physical PDF page."""
+    line_number: int  # 1-based line number on this physical page
+    text: str
+    start_char: int
+    end_char: int
+
+
+@dataclass
 class ExtractedPage:
     """Represents a single extracted physical page from the PDF."""
     pdf_page: int  # 1-based physical page number
@@ -21,6 +30,7 @@ class ExtractedPage:
     source: str
     char_count: int
     is_empty: bool = False
+    lines: List[PageLine] = field(default_factory=list)
 
 
 @dataclass
@@ -234,13 +244,29 @@ def extract_pages(pdf_path: Path) -> Tuple[List[ExtractedPage], IngestionSummary
         else:
             total_chars += char_count
 
+        # Compute deterministic line tracking provenance
+        page_lines: List[PageLine] = []
+        current_offset = 0
+        for line_no, line_text in enumerate(clean_text.splitlines(), start=1):
+            line_len = len(line_text)
+            page_lines.append(
+                PageLine(
+                    line_number=line_no,
+                    text=line_text,
+                    start_char=current_offset,
+                    end_char=current_offset + line_len
+                )
+            )
+            current_offset += line_len + 1  # accounts for newline separator
+
         extracted_pages.append(
             ExtractedPage(
                 pdf_page=page_num,
                 text=clean_text,
                 source=source_name,
                 char_count=char_count,
-                is_empty=is_empty
+                is_empty=is_empty,
+                lines=page_lines
             )
         )
 
