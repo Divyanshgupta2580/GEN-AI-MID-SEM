@@ -1,0 +1,48 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Environment Variables
+.env
+*.env.local
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Vector Database & Caches
+chroma_db/
+.chroma/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Large Binary Documents & Raw Downloads
+*.pdf
+data/raw/*.pdf
+
